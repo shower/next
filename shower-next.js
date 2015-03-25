@@ -8,7 +8,7 @@ modules.define('shower-next', [
     'util.bind'
 ], function (provide, EventEmitter, extend, bind) {
 
-    var timerPluginName = 'shower-timer';
+    var TIMER_PLUGIN_NAME = 'shower-timer';
 
     /**
      * @class
@@ -97,13 +97,13 @@ modules.define('shower-next', [
                 .on('next', this._onNext, this)
                 .on('prev', this._onPrev, this);
 
-            var timerPlugin = shower.plugins.get(timerPluginName);
+            var timerPlugin = shower.plugins.get(TIMER_PLUGIN_NAME);
             if (timerPlugin) {
                 this._setupTimerPluginListener(timerPlugin);
             } else {
                 this._pluginsListeners = shower.plugins.events.group()
                     .on('pluginadd', function (e) {
-                        if (e.get('name') == timerPluginName) {
+                        if (e.get('name') == TIMER_PLUGIN_NAME) {
                             this._setupTimerPluginListener();
                             this._pluginsListeners.offAll();
                         }
@@ -113,10 +113,10 @@ modules.define('shower-next', [
 
         _setupTimerPluginListener: function (plugin) {
             if (!plugin) {
-                plugin = shower.plugins.get(timerPluginName);
+                plugin = shower.plugins.get(TIMER_PLUGIN_NAME);
             }
             plugin.events
-                .on('next', this._onNext, this);
+                .on('next', this._onNext, this, 100);
         },
 
         _clearListeners: function () {
