@@ -3,12 +3,13 @@
  * Next plugin for Shower
  */
 modules.define('shower-next', [
+    'shower',
     'Emitter',
-    'util.extend',
-    'util.bind'
-], function (provide, EventEmitter, extend, bind) {
+    'util.extend'
+], function (provide, globalShower, EventEmitter, extend) {
 
     var TIMER_PLUGIN_NAME = 'shower-timer';
+    var DEFAULT_SELECTOR = '.next';
 
     /**
      * @class
@@ -20,23 +21,22 @@ modules.define('shower-next', [
      */
     function Next (shower, options) {
         options = options || {};
-        this.events = new EventEmitter();
+
+        this.events = new EventEmitter({context: this});
 
         this._shower = shower;
-        this._elementsSelector = options.selector || '.next';
+        this._elementsSelector = options.selector || DEFAULT_SELECTOR;
         this._elements = [];
 
         this._innerComplete = 0;
+
+        this._setupListeners();
+        if (this._shower.player.getCurrentSlideIndex() != -1) {
+            this._onSlideActivate();
+        }
     }
 
     extend(Next.prototype, /** @lends plugin.Next.prototype */{
-
-        init: function () {
-            this._setupListeners();
-            if (this._shower.player.getCurrentSlideIndex() != -1) {
-                this._onSlideActivate();
-            }
-        },
 
         destroy: function () {
             this._clearListeners();
@@ -52,7 +52,7 @@ modules.define('shower-next', [
          * @return {plugin.Next}
          */
         next: function () {
-            if (!this._elements) {
+            if (!this._elements.length) {
                 throw new Error('Inner nav elements not found.');
             }
 
@@ -60,14 +60,20 @@ modules.define('shower-next', [
             this._go();
 
             this.events.emit('next');
+
             return this;
         },
 
         prev: function () {
+            if (!this._elements.length) {
+                throw new Error('Inner nav elements not found.');
+            }
+
             this._innerComplete--;
             this._go();
 
             this.events.emit('prev');
+
             return this;
         },
 
@@ -97,13 +103,13 @@ modules.define('shower-next', [
                 .on('next', this._onNext, this)
                 .on('prev', this._onPrev, this);
 
-            var timerPlugin = shower.plugins.get(TIMER_PLUGIN_NAME);
+            var timerPlugin = globalShower.plugins.get(TIMER_PLUGIN_NAME, shower);
             if (timerPlugin) {
                 this._setupTimerPluginListener(timerPlugin);
             } else {
-                this._pluginsListeners = shower.plugins.events.group()
-                    .on('pluginadd', function (e) {
-                        if (e.get('name') == TIMER_PLUGIN_NAME) {
+                this._pluginsListeners = globalShower.plugins.events.group()
+                    .on('add', function (e) {
+                        if (e.get('name') === TIMER_PLUGIN_NAME) {
                             this._setupTimerPluginListener();
                             this._pluginsListeners.offAll();
                         }
@@ -113,7 +119,7 @@ modules.define('shower-next', [
 
         _setupTimerPluginListener: function (plugin) {
             if (!plugin) {
-                plugin = shower.plugins.get(TIMER_PLUGIN_NAME);
+                var timerPlugin = globalShower.plugins.get(TIMER_PLUGIN_NAME, this._shower);
             }
             plugin.events
                 .on('next', this._onNext, this, 100);
@@ -125,25 +131,28 @@ modules.define('shower-next', [
         },
 
         _getElements: function () {
-            var slideLayout = this._shower.player.getCurrentSlide().getLayout(),
-                slideElement = slideLayout.getElement();
+            var slideLayout = this._shower.player.getCurrentSlide().getLayout();
+            var slideElement = slideLayout.getElement();
 
             return slideElement.querySelectorAll(this._elementsSelector);
         },
 
         _onNext: function (e) {
             var elementsLength = this._elements.length;
-            if (this._shower.container.isSlideMode() && elementsLength && this._innerComplete < elementsLength) {
+            var isSlideMode = this._shower.container.isSlideMode();
+
+            if (isSlideMode && elementsLength && this._innerComplete < elementsLength) {
                 e.preventDefault();
                 this.next();
             }
         },
 
         _onPrev: function (e) {
-            var elementsLength = this._elements.length,
-                isSlideMode = this._shower.container.isSlideMode();
+            var elementsLength = this._elements.length;
+            var isSlideMode = this._shower.container.isSlideMode();
+            var completed = this._innerComplete;
 
-            if (elementsLength && this._innerComplete < elementsLength && this._innerComplete > 0) {
+            if (elementsLength && completed < elementsLength && completed > 0) {
                 e.preventDefault();
                 this.prev();
             }
