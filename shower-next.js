@@ -128,13 +128,19 @@ modules.define('shower-next', [
         _clearListeners: function () {
             this._showerListeners.offAll();
             this._playerListeners.offAll();
+
+            if (this._pluginsListeners) {
+                this._pluginsListeners.offAll();
+            }
         },
 
         _getElements: function () {
             var slideLayout = this._shower.player.getCurrentSlide().getLayout();
             var slideElement = slideLayout.getElement();
 
-            return slideElement.querySelectorAll(this._elementsSelector);
+            return Array.prototype.slice.call(
+                slideElement.querySelectorAll(this._elementsSelector)
+            );
         },
 
         _onNext: function (e) {
@@ -172,8 +178,6 @@ modules.define('shower-next', [
 
         _onSlideActivate: function () {
             this._elements = this._getElements();
-            this._elements = Array.prototype.slice.call(this._elements);
-
             this._innerComplete = this._getInnerComplete();
         },
 
