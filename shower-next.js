@@ -19,7 +19,7 @@ modules.define('shower-next', [
      * @param {String} [options.selector = '.next']
      * @constructor
      */
-    function Next (shower, options) {
+    function Next(shower, options) {
         options = options || {};
 
         this.events = new EventEmitter({context: this});
