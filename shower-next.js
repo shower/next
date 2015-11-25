@@ -135,7 +135,7 @@ shower.modules.define('shower-next', [
         },
 
         _getElements: function () {
-            var slideLayout = this._shower.player.getCurrentSlide().getLayout();
+            var slideLayout = this._shower.player.getCurrentSlide().layout;
             var slideElement = slideLayout.getElement();
 
             return Array.prototype.slice.call(
