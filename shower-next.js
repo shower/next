@@ -2,7 +2,7 @@
  * @fileOverview
  * Next plugin for Shower
  */
-modules.define('shower-next', [
+shower.modules.define('shower-next', [
     'shower',
     'Emitter',
     'util.extend'
@@ -191,6 +191,6 @@ modules.define('shower-next', [
     provide(Next);
 });
 
-modules.require(['shower'], function (shower) {
-    shower.plugins.add('shower-next');
+shower.modules.require(['shower'], function (sh) {
+    sh.plugins.add('shower-next');
 });
